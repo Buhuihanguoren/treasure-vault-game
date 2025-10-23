@@ -91,3 +91,4 @@ None currently.
 
 ## Update
 1. Shadow now rotates.
+2. Added align for Door, Handle and Shadow with basic debug for shadow in console.
