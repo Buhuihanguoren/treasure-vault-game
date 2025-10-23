@@ -1,0 +1,20 @@
+{
+  "_comment": "dependencies: version (^ = and above)",
+  "name": "treasure-vault-game",
+  "version": "1.0.0",
+  "description": "Treasure Vault Mini Game",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "gsap": "^3.12.5",
+    "pixi.js": "^8.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "vite": "^5.0.11"
+  }
+}
