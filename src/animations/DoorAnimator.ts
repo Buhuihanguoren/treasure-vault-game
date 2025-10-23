@@ -11,11 +11,23 @@ export class DoorAnimator {
     static async openDoor(
         doorClosed: PIXI.Sprite,
         doorOpen: PIXI.Sprite,
-        handle: PIXI.Sprite
+        handle: PIXI.Sprite,
+		shadow?: PIXI.Sprite
+		
     ): Promise<void> {
         console.log('Opening vault door...');
+		console.log('Shadow received:', shadow); //DEBUG
 
-        // Hide closed door, show open door
+        // Hide handle/shadow instantly
+		handle.visible = false;
+		console.log('Handle hidden'); //DEBUG
+		
+		if (shadow) {
+			shadow.visible = false;
+			console.log('Shadow hidden!');
+		} else { console.log('NO SHADOW TO HIDE!')
+		}
+		
         doorClosed.visible = false;
         doorOpen.visible = true;
         
@@ -24,13 +36,11 @@ export class DoorAnimator {
         doorOpen.anchor.set(doorClosed.anchor.x, doorClosed.anchor.y);
         doorOpen.scale.set(doorClosed.scale.x, doorClosed.scale.y);
 
-        // Start slightly to the left
-        doorOpen.x = doorClosed.x - 50;
         doorOpen.alpha = 0;
 
         // Animate door sliding open to the side
         await gsap.to(doorOpen, {
-            x: doorClosed.x + 200, // slide to the right
+            x: doorClosed.x - 250, // slide to the right
             alpha: 1,
             duration: 1,
             ease: 'power2.out'
@@ -42,26 +52,32 @@ export class DoorAnimator {
 
     //Close door back
     //Resets everything
-    static async closeDoor(
-        doorClosed: PIXI.Sprite,
-        doorOpen: PIXI.Sprite,
-        handle: PIXI.Sprite
-    ): Promise<void> {
-        console.log('Closing vault door...');
+	
+	static async closeDoor(
+		doorClosed: PIXI.Sprite,
+		doorOpen: PIXI.Sprite,
+		handle: PIXI.Sprite,
+		shadow?: PIXI.Sprite	
+	): Promise<void> {
+		console.log('Closing vault door...');
+    
+    // Animate door sliding back
+		await gsap.to(doorOpen, {
+        x: doorClosed.x,
+        alpha: 0,
+        duration: 0.8,
+        ease: 'power2.in'
+    });
 
-        // Animate door sliding back
-        await gsap.to(doorOpen, {
-            x: doorClosed.x - 50,
-            alpha: 0,
-            duration: 0.8,
-            ease: 'power2.in'
-        });
-
-        // Show closed door again
-        doorOpen.visible = false;
-        doorClosed.visible = true;
-        handle.visible = true;
-
-        console.log('Door closed, ready for next attempt');
+    // Show closed door and handle again
+    doorOpen.visible = false;
+    doorClosed.visible = true;
+    
+    // Show shadow again
+	handle.visible = true;
+    if (shadow) {
+        shadow.visible = true;
     }
-}
+    
+    console.log('Door closed, ready for next attempt');
+}}

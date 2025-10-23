@@ -94,6 +94,9 @@ export class Game {
     const doorClosed = this.vaultDoor.getDoorClosed();
     const doorOpen = this.vaultDoor.getDoorOpen();
     const handle = this.vaultDoor.getHandle();
+	const shadow = this.vaultDoor.getHandleShadow();
+
+	console.log('Got shadow from vault:', shadow); //DEBUG
 
     if (!doorClosed || !doorOpen || !handle) return;
 
@@ -102,13 +105,14 @@ export class Game {
         this.handleController.setInteractive(false);
     }
 
-    await DoorAnimator.openDoor(doorClosed, doorOpen, handle);
+	console.log('About to open door, passing shadow:', shadow); //DEBUG
+    await DoorAnimator.openDoor(doorClosed, doorOpen, handle, shadow);
 
     if (this.shineEffect) {
         await this.shineEffect.play(5);
     }
 
-    await DoorAnimator.closeDoor(doorClosed, doorOpen, handle);
+    await DoorAnimator.closeDoor(doorClosed, doorOpen, handle,shadow);
 
     // Re-enable input
     if (this.handleController) {
