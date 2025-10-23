@@ -1,28 +1,37 @@
 import * as PIXI from 'pixi.js';
 import { gsap } from 'gsap';
 
-//HandleAnimator
-//Does the crazy spin animation when player messes up
-
 export class HandleAnimator {
-	//Spin handle like crazy (multiple full rotations)
-    // Like when you fail a lockpick in Skyrim
-	 
-    static async crazySpin(handle: PIXI.Sprite): Promise<void> {
-        // Save current rotation so we can go back to 0 after
+    static async crazySpin(handle: PIXI.Sprite, shadow?: PIXI.Sprite): Promise<void> {
         const currentRotation = handle.rotation;
-
-        // Spin 5 full rotations (5 * 2π radians)
         const spinAmount = Math.PI * 2 * 5;
 
-        await gsap.to(handle, {
-            rotation: currentRotation + spinAmount,
-            duration: 1.5, // seconds of spinning
-            ease: 'power2.inOut'
-        });
+        // Spin both handle and shadow
+        const animations = [
+            gsap.to(handle, {
+                rotation: currentRotation + spinAmount,
+                duration: 1.5,
+                ease: 'power2.inOut'
+            })
+        ];
 
-        // Reset to 0 rotation after crazy spin
+        if (shadow) {
+            animations.push(
+                gsap.to(shadow, {
+                    rotation: currentRotation + spinAmount,
+                    duration: 1.5,
+                    ease: 'power2.inOut'
+                })
+            );
+        }
+
+        await Promise.all(animations);
+
+        // Reset both to 0
         handle.rotation = 0;
+        if (shadow) {
+            shadow.rotation = 0;
+        }
         
         console.log('Handle reset after crazy spin');
     }

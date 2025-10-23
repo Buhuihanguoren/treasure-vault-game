@@ -3,12 +3,14 @@ import { gsap } from 'gsap';
 
 export class HandleController {
     private handle: PIXI.Sprite;
+    private shadow: PIXI.Sprite | null = null; // NEW
     private isRotating: boolean = false;
     private currentRotation: number = 0;
     private onRotationCallback?: (direction: 'CW' | 'CCW') => void;
 
-    constructor(handle: PIXI.Sprite) {
+    constructor(handle: PIXI.Sprite, shadow?: PIXI.Sprite) { // NEW: optional shadow
         this.handle = handle;
+        this.shadow = shadow || null; // NEW
         this.setupInteraction();
     }
 
@@ -31,7 +33,6 @@ export class HandleController {
     }
 
     private handleClick(event: PIXI.FederatedPointerEvent): void {
-        // Use global coords so rotation doesn't mess up detection
         const clickX = event.global.x;
         const handleGlobalPos = this.handle.getGlobalPosition();
         const handleX = handleGlobalPos.x;
@@ -46,7 +47,6 @@ export class HandleController {
     private async rotate(direction: 'CW' | 'CCW'): Promise<void> {
         this.isRotating = true;
 
-        // 60 degrees in radians
         const rotationAmount = Math.PI / 3;
         
         if (direction === 'CW') {
@@ -55,11 +55,27 @@ export class HandleController {
             this.currentRotation -= rotationAmount;
         }
 
-        await gsap.to(this.handle, {
-            rotation: this.currentRotation,
-            duration: 0.3,
-            ease: 'power2.out'
-        });
+        // Rotate handle and shadow together
+        const animations = [
+            gsap.to(this.handle, {
+                rotation: this.currentRotation,
+                duration: 0.3,
+                ease: 'power2.out'
+            })
+        ];
+
+        // Add shadow rotation if it exists
+        if (this.shadow) {
+            animations.push(
+                gsap.to(this.shadow, {
+                    rotation: this.currentRotation,
+                    duration: 0.3,
+                    ease: 'power2.out'
+                })
+            );
+        }
+
+        await Promise.all(animations);
 
         this.isRotating = false;
         
@@ -70,5 +86,10 @@ export class HandleController {
 
     public getCurrentPosition(): number {
         return Math.round(this.currentRotation / (Math.PI / 3));
+    }
+
+    // Block input during animations
+    public setInteractive(enabled: boolean): void {
+        this.handle.eventMode = enabled ? 'static' : 'none';
     }
 }

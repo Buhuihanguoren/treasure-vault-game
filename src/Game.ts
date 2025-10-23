@@ -51,8 +51,10 @@ export class Game {
         }
 
         const handle = this.vaultDoor.getHandle();
+		const shadow = this.vaultDoor.getHandleShadow();
+		
         if (handle) {
-            this.handleController = new HandleController(handle);
+             this.handleController = new HandleController(handle, shadow);
             
             this.handleController.setRotationCallback((direction) => {
                 this.onHandleRotated(direction);
@@ -86,38 +88,56 @@ export class Game {
 
     // Win: open door, show treasure, wait 5s, close
     private async playSuccessSequence(): Promise<void> {
-        this.isPlaying = true;
-        console.log('SUCCESS! Opening vault...');
+    this.isPlaying = true;
+    console.log('SUCCESS! Opening vault...');
 
-        const doorClosed = this.vaultDoor.getDoorClosed();
-        const doorOpen = this.vaultDoor.getDoorOpen();
-        const handle = this.vaultDoor.getHandle();
+    const doorClosed = this.vaultDoor.getDoorClosed();
+    const doorOpen = this.vaultDoor.getDoorOpen();
+    const handle = this.vaultDoor.getHandle();
 
-        if (!doorClosed || !doorOpen || !handle) return;
+    if (!doorClosed || !doorOpen || !handle) return;
 
-        await DoorAnimator.openDoor(doorClosed, doorOpen, handle);
-
-        if (this.shineEffect) {
-            await this.shineEffect.play(5);
-        }
-
-        await DoorAnimator.closeDoor(doorClosed, doorOpen, handle);
-
-        this.combinationManager.reset();
-        this.isPlaying = false;
+    // Block input during animation
+    if (this.handleController) {
+        this.handleController.setInteractive(false);
     }
 
+    await DoorAnimator.openDoor(doorClosed, doorOpen, handle);
+
+    if (this.shineEffect) {
+        await this.shineEffect.play(5);
+    }
+
+    await DoorAnimator.closeDoor(doorClosed, doorOpen, handle);
+
+    // Re-enable input
+    if (this.handleController) {
+        this.handleController.setInteractive(true);
+    }
+
+    this.combinationManager.reset();
+    this.isPlaying = false;
+}
     // Fail: spin handle, reset
     private async playFailureSequence(): Promise<void> {
-        this.isPlaying = true;
-        console.log('WRONG! Spinning handle...');
+    this.isPlaying = true;
+    console.log('WRONG! Spinning handle...');
 
-        const handle = this.vaultDoor.getHandle();
-        if (!handle) return;
+    const handle = this.vaultDoor.getHandle();
+    const shadow = this.vaultDoor.getHandleShadow(); // shadow
+    if (!handle) return;
 
-        await HandleAnimator.crazySpin(handle);
-
-        this.combinationManager.reset();
-        this.isPlaying = false;
+    if (this.handleController) {
+        this.handleController.setInteractive(false);
     }
+
+    await HandleAnimator.crazySpin(handle, shadow); // pass shadow
+
+    if (this.handleController) {
+        this.handleController.setInteractive(true);
+    }
+
+    this.combinationManager.reset();
+    this.isPlaying = false;
+	}
 }

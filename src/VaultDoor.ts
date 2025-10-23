@@ -71,12 +71,18 @@ export class VaultDoor {
             this.doorHandle.scale.set(this.doorClosed.scale.x);
         }
 
-        if (this.handleShadow && this.doorClosed) {
-            this.handleShadow.anchor.set(0.5);
-            this.handleShadow.position.set(screenWidth / 2, screenHeight / 2);
-            this.handleShadow.scale.set(this.doorClosed.scale.x);
-        }
-    }
+        // Position shadow SLIGHTLY offset (bottom-right of handle)
+		if (this.handleShadow && this.doorClosed) {
+			this.handleShadow.anchor.set(0.5);
+			
+			this.handleShadow.position.set(
+			screenWidth / 2 + 5,  // 5px right
+			screenHeight / 2 + 5  // 5px down
+			);
+			
+			this.handleShadow.scale.set(this.doorClosed.scale.x);
+			this.handleShadow.alpha = 0.7; // slightly transparent
+    }	}
 
     public getContainer(): PIXI.Container {
         return this.container;
@@ -94,4 +100,8 @@ export class VaultDoor {
     public getDoorOpen(): PIXI.Sprite | null {
         return this.doorOpen;
     }
+	
+	public getHandleShadow(): PIXI.Sprite | null {
+    return this.handleShadow;
+	}
 }
