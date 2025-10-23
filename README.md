@@ -88,3 +88,6 @@ None currently.
 - All animations use GSAP with async/await (no setTimeout/setInterval)
 - Click detection uses global coordinates to handle rotated sprites correctly
 - Game is responsive for different screen sizes
+
+## Update
+1. Shadow now rotates.
