@@ -2,7 +2,9 @@
 
 A minor project game where players must unlock a vault safe by rotating a wheel in a generated pre-set order.
 
-![Demo](DEMO.mp4)
+## Video Demo
+
+[![Watch the demo](thumbnail.png)](DEMO.mp4)
 
 ## How to Play
 
