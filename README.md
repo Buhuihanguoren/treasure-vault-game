@@ -2,10 +2,12 @@
 
 A minor project game where players must unlock a vault safe by rotating a wheel in a generated pre-set order.
 
+![Demo](DEMO.mp4)
+
 ## How to Play
 
 1. A secret 3-step combination is generated and logged to the browser console
-2. Click the left or right side of the vault handle to rotate it
+2. Click the ***left*** or ***right*** side of the vault handle to rotate it
 3. Enter the combination correctly to unlock the vault
 4. If you make a mistake, the handle spins and a new code is generated
 
@@ -89,7 +91,11 @@ None currently.
 - Click detection uses global coordinates to handle rotated sprites correctly
 - Game is responsive for different screen sizes
 
-## Update
-1. Shadow now rotates.
-2. Added align for Door, Handle and Shadow with basic debug for shadow in console.
-3. Added slightly better doora animation. Bigger shine effect.
+## Updated
+
+- Shadow rotates with handle for realistic depth effect
+- Try counter displays failed attempts on keypad
+- Responsive design works on all screen sizes
+- Smooth GSAP animations throughout
+
+							**Built with ❤️ for Dreamshot**

@@ -12,7 +12,9 @@ export class Game {
     private handleController: HandleController | null = null;
     private combinationManager: CombinationManager;
     private shineEffect: ShineEffect | null = null;
-    private isPlaying: boolean = false; // block input during animations
+    private isPlaying: boolean = false;
+    private tryCount: number = 0;
+    private tryCountText: PIXI.Text | null = null;
 
     constructor() {
         this.app = new PIXI.Application();
@@ -40,7 +42,22 @@ export class Game {
         this.app.stage.addChild(this.vaultDoor.getContainer());
         this.app.stage.addChild(this.shineEffect.getSprite());
 
+        // Create counter display
+        this.tryCountText = new PIXI.Text({
+            text: '0',
+            style: {
+                fontFamily: 'Courier New, monospace',
+                fontSize: 48,
+                fill: 0x00ff41,
+                fontWeight: 'bold'
+            }
+        });
+        this.tryCountText.anchor.set(0.5);
+        this.app.stage.addChild(this.tryCountText);
+
         this.vaultDoor.positionElements(this.app.screen.width, this.app.screen.height);
+        
+        this.positionTryCounter();
         
         if (this.shineEffect) {
             this.shineEffect.position(
@@ -51,10 +68,10 @@ export class Game {
         }
 
         const handle = this.vaultDoor.getHandle();
-		const shadow = this.vaultDoor.getHandleShadow();
-		
+        const shadow = this.vaultDoor.getHandleShadow();
+        
         if (handle) {
-             this.handleController = new HandleController(handle, shadow);
+            this.handleController = new HandleController(handle, shadow);
             
             this.handleController.setRotationCallback((direction) => {
                 this.onHandleRotated(direction);
@@ -63,13 +80,41 @@ export class Game {
             console.log('Handle is now interactive!');
         }
 
-        // Handle window resize
         window.addEventListener('resize', () => {
             this.app.renderer.resize(window.innerWidth, window.innerHeight);
             this.vaultDoor.positionElements(window.innerWidth, window.innerHeight);
+            this.positionTryCounter();
+            
+            if (this.shineEffect) {
+                this.shineEffect.position(
+                    window.innerWidth / 2,
+                    window.innerHeight / 2,
+                    Math.min(window.innerWidth, window.innerHeight) / 800
+                );
+            }
         });
 
         console.log('Game Started!');
+    }
+
+    // Position counter on the keypad
+    private positionTryCounter(): void {
+        if (!this.tryCountText) return;
+        
+        const doorScale = Math.min(this.app.screen.width, this.app.screen.height) / 800;
+        
+        const offsetX = -462;
+        const offsetY = -41;
+        
+        this.tryCountText.x = (this.app.screen.width / 2) + (offsetX * doorScale);
+        this.tryCountText.y = (this.app.screen.height / 2) + (offsetY * doorScale);
+    }
+
+    // Update counter number
+    private updateTryCounter(): void {
+        if (this.tryCountText) {
+            this.tryCountText.text = `${this.tryCount}`;
+        }
     }
 
     private async onHandleRotated(direction: 'CW' | 'CCW'): Promise<void> {
@@ -86,62 +131,66 @@ export class Game {
         }
     }
 
-    // Win: open door, show treasure, wait 5s, close
+    // Player wins
     private async playSuccessSequence(): Promise<void> {
-    this.isPlaying = true;
-    console.log('SUCCESS! Opening vault...');
+        this.isPlaying = true;
 
-    const doorClosed = this.vaultDoor.getDoorClosed();
-    const doorOpen = this.vaultDoor.getDoorOpen();
-    const handle = this.vaultDoor.getHandle();
-	const shadow = this.vaultDoor.getHandleShadow();
+        const doorClosed = this.vaultDoor.getDoorClosed();
+        const doorOpen = this.vaultDoor.getDoorOpen();
+        const handle = this.vaultDoor.getHandle();
+        const shadow = this.vaultDoor.getHandleShadow();
 
-	console.log('Got shadow from vault:', shadow); //DEBUG
+        if (!doorClosed || !doorOpen || !handle) return;
 
-    if (!doorClosed || !doorOpen || !handle) return;
+        if (this.handleController) {
+            this.handleController.setInteractive(false);
+        }
 
-    // Block input during animation
-    if (this.handleController) {
-        this.handleController.setInteractive(false);
+        await DoorAnimator.openDoor(doorClosed, doorOpen, handle, shadow);
+
+        if (this.shineEffect) {
+            await this.shineEffect.play(5);
+        }
+
+        await DoorAnimator.closeDoor(doorClosed, doorOpen, handle, shadow);
+
+        if (this.handleController) {
+            this.handleController.setInteractive(true);
+        }
+
+        this.combinationManager.reset();
+        
+        // Reset counter on win
+        this.tryCount = 0;
+        this.updateTryCounter();
+        
+        this.isPlaying = false;
     }
 
-	console.log('About to open door, passing shadow:', shadow); //DEBUG
-    await DoorAnimator.openDoor(doorClosed, doorOpen, handle, shadow);
-
-    if (this.shineEffect) {
-        await this.shineEffect.play(5);
-    }
-
-    await DoorAnimator.closeDoor(doorClosed, doorOpen, handle,shadow);
-
-    // Re-enable input
-    if (this.handleController) {
-        this.handleController.setInteractive(true);
-    }
-
-    this.combinationManager.reset();
-    this.isPlaying = false;
-}
-    // Fail: spin handle, reset
+    // Player fails
     private async playFailureSequence(): Promise<void> {
-    this.isPlaying = true;
-    console.log('WRONG! Spinning handle...');
+        this.isPlaying = true;
 
-    const handle = this.vaultDoor.getHandle();
-    const shadow = this.vaultDoor.getHandleShadow(); // shadow
-    if (!handle) return;
+        const handle = this.vaultDoor.getHandle();
+        const shadow = this.vaultDoor.getHandleShadow();
+        if (!handle) return;
 
-    if (this.handleController) {
-        this.handleController.setInteractive(false);
+        if (this.handleController) {
+            this.handleController.setInteractive(false);
+        }
+
+        await HandleAnimator.crazySpin(handle, shadow);
+
+        if (this.handleController) {
+            this.handleController.setInteractive(true);
+        }
+
+        this.combinationManager.reset();
+        
+        // Count failed attempts
+        this.tryCount++;
+        this.updateTryCounter();
+        
+        this.isPlaying = false;
     }
-
-    await HandleAnimator.crazySpin(handle, shadow); // pass shadow
-
-    if (this.handleController) {
-        this.handleController.setInteractive(true);
-    }
-
-    this.combinationManager.reset();
-    this.isPlaying = false;
-	}
 }

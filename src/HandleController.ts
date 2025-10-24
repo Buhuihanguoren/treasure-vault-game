@@ -3,14 +3,14 @@ import { gsap } from 'gsap';
 
 export class HandleController {
     private handle: PIXI.Sprite;
-    private shadow: PIXI.Sprite | null = null; // NEW
+    private shadow: PIXI.Sprite | null = null;
     private isRotating: boolean = false;
     private currentRotation: number = 0;
     private onRotationCallback?: (direction: 'CW' | 'CCW') => void;
 
-    constructor(handle: PIXI.Sprite, shadow?: PIXI.Sprite) { // NEW: optional shadow
+    constructor(handle: PIXI.Sprite, shadow?: PIXI.Sprite) {
         this.handle = handle;
-        this.shadow = shadow || null; // NEW
+        this.shadow = shadow || null;
         this.setupInteraction();
     }
 
@@ -24,7 +24,6 @@ export class HandleController {
 
         this.handle.on('pointerdown', (event: PIXI.FederatedPointerEvent) => {
             if (this.isRotating) {
-                console.log('Already rotating, wait...');
                 return;
             }
 

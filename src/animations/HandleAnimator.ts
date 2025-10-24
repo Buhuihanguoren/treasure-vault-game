@@ -6,7 +6,7 @@ export class HandleAnimator {
         const currentRotation = handle.rotation;
         const spinAmount = Math.PI * 2 * 5;
 
-        // Spin both handle and shadow
+        // Spin handle and shadow together
         const animations = [
             gsap.to(handle, {
                 rotation: currentRotation + spinAmount,
@@ -27,12 +27,10 @@ export class HandleAnimator {
 
         await Promise.all(animations);
 
-        // Reset both to 0
+        // Reset to 0
         handle.rotation = 0;
         if (shadow) {
             shadow.rotation = 0;
         }
-        
-        console.log('Handle reset after crazy spin');
     }
 }

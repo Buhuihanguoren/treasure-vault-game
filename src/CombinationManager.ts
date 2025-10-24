@@ -37,7 +37,7 @@ export class CombinationManager {
         
         console.log(`Secret Code: ${codeString}`);
     }
-
+	
     // Check if player's move is correct
     public checkInput(direction: 'CW' | 'CCW'): 'correct' | 'wrong' | 'unlocked' {
         const currentStep = this.secretCode[this.currentStepIndex];
