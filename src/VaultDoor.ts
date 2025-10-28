@@ -36,59 +36,54 @@ export class VaultDoor {
         console.log('Vault assets loaded');
     }
 
-    public positionElements(screenWidth: number, screenHeight: number): void {
-        // Background fills the screen
-        if (this.background) {
-            const bgScale = Math.max(
-                screenWidth / this.background.texture.width,
-                screenHeight / this.background.texture.height
-            );
-            this.background.scale.set(bgScale);
-            this.background.position.set(
-                (screenWidth - this.background.width) / 2,
-                (screenHeight - this.background.height) / 2
-            );
-        }
-
-        if (this.doorClosed) {
-            this.doorClosed.anchor.set(0.5);
-            
-            // Shift door left to align handle with center
-            const doorOffset = 120;
-            this.doorClosed.position.set(screenWidth / 2 + doorOffset, screenHeight / 2);
-            
-            const doorScale = Math.min(screenWidth, screenHeight) / 800;
-            this.doorClosed.scale.set(doorScale);
-        }
-
-        if (this.doorOpen && this.doorClosed) {
-            this.doorOpen.anchor.set(0.5);
-            this.doorOpen.position.set(this.doorClosed.x, this.doorClosed.y);
-            this.doorOpen.scale.set(this.doorClosed.scale.x);
-        }
-
-        if (this.doorHandle && this.doorClosed) {
-            this.doorHandle.anchor.set(0.5);
-            
-            const handleOffset = 76;
-            this.doorHandle.position.set(screenWidth / 2 + handleOffset, screenHeight / 2);
-            this.doorHandle.scale.set(this.doorClosed.scale.x);
-        }
-
-        // Shadow is slightly offset from handle
-        if (this.handleShadow && this.doorClosed) {
-            this.handleShadow.anchor.set(0.5);
-            
-            const handleOffset = 76;
-            this.handleShadow.position.set(
-                screenWidth / 2 + handleOffset + 5,
-                screenHeight / 2 + 5
-            );
-            
-            this.handleShadow.scale.set(this.doorClosed.scale.x);
-            this.handleShadow.alpha = 0.7;
-        }
+public positionElements(referenceWidth: number, referenceHeight: number): void {
+    // Background centered at container origin
+    if (this.background) {
+        this.background.anchor.set(0.5);
+        this.background.position.set(0, 0);
+        
+        const bgScale = Math.max(
+            referenceWidth / this.background.texture.width,
+            referenceHeight / this.background.texture.height
+        );
+        this.background.scale.set(bgScale);
     }
+
+    // Closed door position
+    const closedDoorX = 80;
+    const closedDoorY = 0;
+
+    // Open door position (separate from closed)
+    const openDoorX = 795;
+    const openDoorY = 3;
+
+    // Closed door
+    if (this.doorClosed) {
+        this.doorClosed.anchor.set(0.466, 0.5);
+        this.doorClosed.position.set(closedDoorX, closedDoorY);
+        this.doorClosed.scale.set(1);
+    }
+
+    // Open door
+    if (this.doorOpen) {
+        this.doorOpen.anchor.set(0.759, 0.5);
+        this.doorOpen.position.set(openDoorX, openDoorY);
+        this.doorOpen.scale.set(1);
+    }
+
+    if (this.doorHandle) {
+        this.doorHandle.anchor.set(0.5);
+        this.doorHandle.position.set(70, 0);
+        this.doorHandle.scale.set(1);
+    }
+
+    if (this.handleShadow) {
+        this.handleShadow.anchor.set(0.5);
+        this.handleShadow.position.set(70, 5);
+        this.handleShadow.scale.set(1);
+        this.handleShadow.alpha = 0.7;
+    }
+}
 
     public getContainer(): PIXI.Container {
         return this.container;

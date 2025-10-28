@@ -6,7 +6,6 @@ export class HandleController {
     private shadow: PIXI.Sprite | null = null;
     private isRotating: boolean = false;
     private currentRotation: number = 0;
-    private onRotationCallback?: (direction: 'CW' | 'CCW') => void;
 
     constructor(handle: PIXI.Sprite, shadow?: PIXI.Sprite) {
         this.handle = handle;
@@ -14,31 +13,26 @@ export class HandleController {
         this.setupInteraction();
     }
 
-    public setRotationCallback(callback: (direction: 'CW' | 'CCW') => void): void {
-        this.onRotationCallback = callback;
-    }
-
     private setupInteraction(): void {
         this.handle.eventMode = 'static';
         this.handle.cursor = 'pointer';
 
         this.handle.on('pointerdown', (event: PIXI.FederatedPointerEvent) => {
-            if (this.isRotating) {
-                return;
-            }
-
+            if (this.isRotating) return;
             this.handleClick(event);
         });
     }
 
     private handleClick(event: PIXI.FederatedPointerEvent): void {
-        const clickX = event.global.x;
-        const handleGlobalPos = this.handle.getGlobalPosition();
-        const handleX = handleGlobalPos.x;
+        // Use parent container for coordinate conversion (not the rotating handle itself)
+        const parent = this.handle.parent;
+        if (!parent) return;
         
-        const direction = clickX < handleX ? 'CCW' : 'CW';
+        const localPos = parent.toLocal(event.global);
+        const handlePos = this.handle.position;
         
-        console.log(`Click X: ${clickX.toFixed(0)}, Handle X: ${handleX.toFixed(0)}, Direction: ${direction}`);
+        // Compare click position to handle position
+        const direction = localPos.x > handlePos.x ? 'CW' : 'CCW';
         
         this.rotate(direction);
     }
@@ -54,7 +48,6 @@ export class HandleController {
             this.currentRotation -= rotationAmount;
         }
 
-        // Rotate handle and shadow together
         const animations = [
             gsap.to(this.handle, {
                 rotation: this.currentRotation,
@@ -63,7 +56,6 @@ export class HandleController {
             })
         ];
 
-        // Add shadow rotation if it exists
         if (this.shadow) {
             animations.push(
                 gsap.to(this.shadow, {
@@ -78,16 +70,9 @@ export class HandleController {
 
         this.isRotating = false;
         
-        if (this.onRotationCallback) {
-            this.onRotationCallback(direction);
-        }
+        this.handle.emit('rotated', direction);
     }
 
-    public getCurrentPosition(): number {
-        return Math.round(this.currentRotation / (Math.PI / 3));
-    }
-
-    // Block input during animations
     public setInteractive(enabled: boolean): void {
         this.handle.eventMode = enabled ? 'static' : 'none';
     }

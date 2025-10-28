@@ -100,4 +100,11 @@ None currently.
 - Responsive design works on all screen sizes
 - Smooth GSAP animations throughout
 
-							**Built with ❤️ for Dreamshot**
+## Requested ⭐ Update (9-28-2025)
+
+- Updated both Door and Open-Door static .png and animation
+- Shine effect now works in spiral, creating 25 effects
+- Proper Resizing for different windows
+- Events instead of Callbacks
+
+**Built with ❤️ for Dreamshot**

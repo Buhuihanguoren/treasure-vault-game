@@ -15,11 +15,13 @@ export class Game {
     private isPlaying: boolean = false;
     private tryCount: number = 0;
     private tryCountText: PIXI.Text | null = null;
+    private gameContainer: PIXI.Container;
 
     constructor() {
         this.app = new PIXI.Application();
         this.vaultDoor = new VaultDoor();
         this.combinationManager = new CombinationManager();
+        this.gameContainer = new PIXI.Container();
     }
 
     public async start(): Promise<void> {
@@ -33,16 +35,16 @@ export class Game {
 
         document.body.appendChild(this.app.canvas);
 
-        console.log('Loading assets...');
         await this.vaultDoor.load();
 
         const shineTexture = await PIXI.Assets.load('shine.png');
         this.shineEffect = new ShineEffect(shineTexture);
         
-        this.app.stage.addChild(this.vaultDoor.getContainer());
-        this.app.stage.addChild(this.shineEffect.getSprite());
+        // Add everything to game container
+        this.gameContainer.addChild(this.vaultDoor.getContainer());
+        this.gameContainer.addChild(this.shineEffect.getContainer());
 
-        // Create counter display
+        // Create counter at fixed position
         this.tryCountText = new PIXI.Text({
             text: '0',
             style: {
@@ -53,19 +55,22 @@ export class Game {
             }
         });
         this.tryCountText.anchor.set(0.5);
-        this.app.stage.addChild(this.tryCountText);
+        this.tryCountText.position.set(-462, -41); // Fixed position
+        this.gameContainer.addChild(this.tryCountText);
 
-        this.vaultDoor.positionElements(this.app.screen.width, this.app.screen.height);
-        
-        this.positionTryCounter();
+        // Add game container to stage
+        this.app.stage.addChild(this.gameContainer);
+
+        // Position everything at FIXED reference size
+        const REFERENCE_SIZE = 800;
+        this.vaultDoor.positionElements(REFERENCE_SIZE, REFERENCE_SIZE);
         
         if (this.shineEffect) {
-            this.shineEffect.position(
-                this.app.screen.width / 2,
-                this.app.screen.height / 2,
-                Math.min(this.app.screen.width, this.app.screen.height) / 800
-            );
+            this.shineEffect.position(0, 0, 1);
         }
+
+        // Scale the ENTIRE parent container to fit screen
+        this.resizeGame();
 
         const handle = this.vaultDoor.getHandle();
         const shadow = this.vaultDoor.getHandleShadow();
@@ -73,41 +78,29 @@ export class Game {
         if (handle) {
             this.handleController = new HandleController(handle, shadow);
             
-            this.handleController.setRotationCallback((direction) => {
+            handle.on('rotated', (direction: 'CW' | 'CCW') => {
                 this.onHandleRotated(direction);
             });
-            
-            console.log('Handle is now interactive!');
         }
 
         window.addEventListener('resize', () => {
             this.app.renderer.resize(window.innerWidth, window.innerHeight);
-            this.vaultDoor.positionElements(window.innerWidth, window.innerHeight);
-            this.positionTryCounter();
-            
-            if (this.shineEffect) {
-                this.shineEffect.position(
-                    window.innerWidth / 2,
-                    window.innerHeight / 2,
-                    Math.min(window.innerWidth, window.innerHeight) / 800
-                );
-            }
+            this.resizeGame(); // Only scale the parent
         });
-
-        console.log('Game Started!');
     }
 
-    // Position counter on the keypad
-    private positionTryCounter(): void {
-        if (!this.tryCountText) return;
+    // Scale parent container to fit any screen
+    private resizeGame(): void {
+        const REFERENCE_SIZE = 800;
+        const scaleX = this.app.screen.width / REFERENCE_SIZE;
+        const scaleY = this.app.screen.height / REFERENCE_SIZE;
+        const scale = Math.min(scaleX, scaleY);
         
-        const doorScale = Math.min(this.app.screen.width, this.app.screen.height) / 800;
-        
-        const offsetX = -462;
-        const offsetY = -41;
-        
-        this.tryCountText.x = (this.app.screen.width / 2) + (offsetX * doorScale);
-        this.tryCountText.y = (this.app.screen.height / 2) + (offsetY * doorScale);
+        this.gameContainer.scale.set(scale);
+        this.gameContainer.position.set(
+            this.app.screen.width / 2,
+            this.app.screen.height / 2
+        );
     }
 
     // Update counter number
